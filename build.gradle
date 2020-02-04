@@ -1,0 +1,83 @@
+buildscript {
+    ext {
+        allureGradleVersion = '2.8.1'
+        allureVersion = '2.13.1'
+        jUnitVersion = '5.6.0'
+        retrofitVersion = '2.6.1'
+        okhttpVersion = '4.1.0'
+        lombokVersion = '1.18.8'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'idea'
+    id 'io.qameta.allure' version '2.8.1'
+    id 'org.springframework.boot' version '2.1.8.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'io.freefair.lombok' version '4.1.6'
+}
+
+group 'io.github.lucysuslova'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+allure {
+    autoconfigure = true
+    version = "$allureVersion"
+
+    useJUnit5 {
+        version = "$allureVersion"
+    }
+}
+
+compileTestJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.compilerArgs += '-parameters'
+}
+
+dependencies {
+    //common
+    compileOnly "org.projectlombok:lombok:$lombokVersion"
+    testImplementation("org.junit.jupiter:junit-jupiter:$jUnitVersion")
+    compile ("io.qameta.allure:allure-selenide:$allureVersion") {
+        exclude group: 'junit', module: 'junit'
+    }
+    compile ("io.qameta.allure:allure-okhttp3:$allureVersion") {
+        exclude group: 'junit', module: 'junit'
+    }
+
+    //api
+    compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    compile "com.squareup.retrofit2:converter-gson:$retrofitVersion"
+    compile "com.squareup.retrofit2:converter-scalars:$retrofitVersion"
+    compile "com.squareup.okhttp3:logging-interceptor:$okhttpVersion"
+
+    //spring
+    implementation 'org.springframework.boot:spring-boot-starter'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'junit', module: 'junit'
+    }
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+}
+
+tasks.withType(Test) {
+    System.setProperty ('allure.results.directory', 'build/allure-results')
+}
+
+tasks.withType(Test)*.finalizedBy 'allureReport'
